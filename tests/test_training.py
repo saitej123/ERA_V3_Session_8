@@ -61,12 +61,12 @@ def test_model_saving(tmp_path):
     save_path = f"{tmp_path}/model.pth"
     
     # Save model
-    torch.save(model.state_dict(), save_path, weights_only=True)
+    torch.save(model.state_dict(), save_path)
     print(f"Model saved successfully: {os.path.exists(save_path)}")
     
     # Load model
     loaded_model = CustomNet()
-    loaded_model.load_state_dict(torch.load(save_path, weights_only=True))
+    loaded_model.load_state_dict(torch.load(save_path))
     
     # Compare parameters
     params_match = all(

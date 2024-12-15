@@ -23,12 +23,11 @@ class CIFAR10Dataset:
                     p=0.5
                 ),
                 A.CoarseDropout(
-                    n_holes=1,
-                    hole_height_range=(16, 16),
-                    hole_width_range=(1, 1),
-                    fill_value=self.mean,
-                    mask_fill_value=None,
-                    p=0.5
+                    num_holes_range=(3, 6),
+                    hole_height_range=(10, 20),
+                    hole_width_range=(10, 20),
+                    fill_value=0,
+                    p=1.0
                 ),
                 A.Normalize(mean=self.mean, std=self.std),
                 ToTensorV2()
