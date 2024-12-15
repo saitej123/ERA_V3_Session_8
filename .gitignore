@@ -1,0 +1,7 @@
+best_model.pth
+data/cifar-10-python.tar.gz
+utils/__pycache__/data_loader.cpython-311.pyc
+utils/__pycache__/transforms.cpython-311.pyc
+models/__pycache__/custom_model.cpython-311.pyc
+data/
+*.pyc

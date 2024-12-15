@@ -1,170 +1,111 @@
-# CIFAR-10 Custom CNN Implementation
+# CIFAR-10 Custom Model
 
-A PyTorch implementation of a custom CNN architecture for CIFAR-10 classification with specific architectural constraints and requirements.
+A PyTorch implementation of a custom CNN for CIFAR-10 classification.
 
-## Table of Contents
-1. [Architecture Features](#architecture-features)
-2. [Data Augmentation](#data-augmentation)
-3. [Project Structure](#project-structure)
-4. [Installation](#installation)
-5. [Usage](#usage)
-6. [Training Features](#training-features)
-7. [Test Coverage](#test-coverage)
-8. [Requirements](#requirements)
+## Test Cases
 
-## Architecture Features
+The model satisfies these conditions:
 
-### Network Design
-* No MaxPooling (uses strided convolutions)
-* Receptive Field > 44 pixels
-* Uses Depthwise Separable Convolution
-* Uses Dilated Convolution
-* Global Average Pooling (GAP)
-* Parameters < 200k
+### 1. Architecture
 
-### Layer Details
-1. **Conv1**: Regular 3x3 Convolution
-   * Input: 32x32x3 → Output: 32x32x16
-   * BatchNorm + ReLU
-   * RF: 3x3
+- No max pooling layers
+- Uses stride convolutions (3x3)
+- Uses depth-wise separable convolution
+- Uses dilated convolution
+- Uses global average pooling
+- Parameters < 200k
 
-2. **Conv2**: Dilated 3x3 Convolution (stride=2)
-   * Input: 32x32x16 → Output: 16x16x32
-   * Dilation=2, BatchNorm + ReLU
-   * RF: 7x7
+### 2. Receptive Field Analysis
 
-3. **Conv3**: Depthwise Separable 3x3 Convolution (stride=2)
-   * Input: 16x16x32 → Output: 8x8x64
-   * BatchNorm + ReLU
-   * RF: 15x15
+The model achieves RF > 44 through:
 
-4. **Conv4**: Regular 3x3 Convolution (stride=2)
-   * Input: 8x8x64 → Output: 4x4x128
-   * BatchNorm + ReLU
-   * RF: 31x31
+```text
+Layer1 (stride 2): RF = 3
+Layer2 (stride 2): RF = 7
+Layer3 (dilated 2): RF = 15
+Layer4 (stride 2): RF = 31
+Final RF = 47
+```
 
-5. **GAP + FC**
-   * Global Average Pooling: 4x4x128 → 1x1x128
-   * Fully Connected: 128 → 10 classes
+### 3. Data Augmentation
 
-### Architecture Benefits
-* **Efficiency**: Depthwise separable convolutions reduce parameters
-* **Large RF**: Dilated convolutions increase receptive field efficiently
-* **No Information Loss**: Strided convolutions instead of pooling
-* **Regularization**: BatchNorm and ReLU after each convolution
+Using `albumentations` with:
 
-## Data Augmentation
-Using Albumentations library with:
+```python
+A.Compose([
+    A.HorizontalFlip(p=0.5),
+    A.ShiftScaleRotate(
+        shift_limit=0.1,
+        scale_limit=0.1,
+        rotate_limit=15,
+        p=0.5
+    ),
+    A.CoarseDropout(
+        max_holes=1,
+        max_height=16,
+        max_width=16,
+        min_holes=1,
+        min_height=16,
+        min_width=16,
+        fill_value=tuple([x * 255.0 for x in CIFAR_MEAN]),
+        p=0.5
+    ),
+    A.Normalize(mean=CIFAR_MEAN, std=CIFAR_STD),
+    ToTensorV2()
+])
+```
 
-1. **Horizontal Flip** (p=0.5)
-   * Random horizontal flips for better generalization
+### 4. Performance Metrics
 
-2. **ShiftScaleRotate**
-   * shift_limit=0.0625 (6.25% image size)
-   * scale_limit=0.1 (±10% scaling)
-   * rotate_limit=45° (±45 degrees rotation)
-   * p=0.5 (50% probability)
+- Target accuracy: > 85% on CIFAR-10 test set
 
-3. **CoarseDropout** (Cutout implementation)
-   * num_holes_range=(3, 6)
-   * hole_height_range=(10, 20)
-   * hole_width_range=(10, 20)
-   * p=0.5 (50% probability)
+## Setup
 
-## Project Structure
-
-### Core Files
-* `model.py`: CNN architecture implementation
-  * CustomNet class with modular layer design
-  * DepthwiseSeparableConv implementation
-* `dataset.py`: CIFAR-10 dataset and augmentations
-  * Custom dataset class with Albumentations
-  * Proper normalization and transforms
-* `utils.py`: Training utilities and metrics
-  * Training and testing loops
-  * Metrics plotting and logging
-* `train.py`: Main training script
-  * Training configuration
-  * Model initialization
-  * Learning rate scheduling
-
-### Test Suite
-Located in `tests/` directory:
-
-1. **Model Tests** (`test_model.py`):
-   * Architecture verification (no MaxPool, has Depthwise, has Dilated)
-   * Parameter count check
-   * Receptive field calculation
-   * Output shape verification
-
-2. **Dataset Tests** (`test_dataset.py`):
-   * Dataset size verification
-   * Data types and shapes
-   * Augmentation parameters
-   * Normalization values
-   * Transform randomness
-
-3. **Training Tests** (`test_training.py`):
-   * Training functionality
-   * Loss improvement
-   * Model saving/loading
-
-## Installation
+Install dependencies:
 
 ```bash
-# Clone the repository
-git clone <repository-url>
-cd <repository-name>
-
-# Create virtual environment (optional but recommended)
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-# or
-.\venv\Scripts\activate  # Windows
-
-# Install dependencies
 pip install -r requirements.txt
 ```
 
 ## Usage
 
-### Training
+Train the model:
+
 ```bash
 python train.py
 ```
 
-The script will:
-1. Train for up to 50 epochs
-2. Save best model as 'best_model.pth'
-3. Generate training plots
-4. Stop early if 85% accuracy reached
+## Model Architecture
 
-### Running Tests
-```bash
-# Run all tests
-pytest tests/
-
-# Run specific test file
-pytest tests/test_model.py
-pytest tests/test_dataset.py
-pytest tests/test_training.py
-
-# Run with coverage report
-pytest --cov=./ tests/
+```text
+Input (3, 32, 32)
+├── Conv1: 3x3 s2 (3 → 16)
+├── Depth-wise Conv: 3x3 s2 (16 → 32)
+├── Dilated Conv: 3x3 d2 (32 → 64)
+├── Conv4: 3x3 s2 (64 → 128)
+├── Global Avg Pool
+└── FC (128 → 10)
 ```
 
-## Training Features
+## Dependencies
 
-1. **Optimizer**: Adam
-   * Initial LR: 0.001
-   * ReduceLROnPlateau scheduling
-   * Factor: 0.5
-   * Patience: 5 epochs
+```text
+torch==2.5.1
+torchvision==0.20.1
+albumentations==1.4.22
+numpy==1.26.4
+loguru==0.7.2
+opencv-python==4.10.0.84
+tqdm==4.66.5
+```
 
-2. **Training Monitoring**:
-   * Progress bar with live metrics
-   * Loss and accuracy plots
-   * Best model saving
-   * Early stopping at 85% accuracy
+## Training Logs
+
+The `training.log` file contains:
+
+- Training/test loss and accuracy
+- Test condition verification
+- Parameter count
+- Best model checkpoints
 
 
