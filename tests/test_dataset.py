@@ -46,9 +46,8 @@ def test_augmentation_requirements():
             print(f"num_holes_range: {transform.num_holes_range}")
             print(f"hole_height_range: {transform.hole_height_range}")
             print(f"hole_width_range: {transform.hole_width_range}")
-            print(f"fill_value: {transform.fill_value}")
-            print(f"mask_fill_value: {transform.mask_fill_value}")
-
+            
+            
 def test_normalization():
     """Print normalization statistics"""
     dataset = CIFAR10Dataset(train=False)

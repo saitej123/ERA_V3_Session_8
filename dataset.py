@@ -3,6 +3,10 @@ from torchvision import datasets
 import numpy as np
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
+from albumentations import (
+    Compose, HorizontalFlip, Normalize, CoarseDropout,
+    ShiftScaleRotate
+)
 
 class CIFAR10Dataset:
     def __init__(self, root="./data", train=True, download=True):
@@ -17,17 +21,13 @@ class CIFAR10Dataset:
             self.transform = A.Compose([
                 A.HorizontalFlip(p=0.5),
                 A.ShiftScaleRotate(
-                    shift_limit=0.1,
-                    scale_limit=0.1,
-                    rotate_limit=15,
-                    p=0.5
+                    shift_limit=0.0625, scale_limit=0.1, rotate_limit=45, p=0.5
                 ),
                 A.CoarseDropout(
                     num_holes_range=(3, 6),
                     hole_height_range=(10, 20),
                     hole_width_range=(10, 20),
-                    fill_value=0,
-                    p=1.0
+                    p=0.5
                 ),
                 A.Normalize(mean=self.mean, std=self.std),
                 ToTensorV2()
