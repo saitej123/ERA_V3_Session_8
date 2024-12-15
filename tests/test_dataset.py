@@ -36,28 +36,27 @@ def test_dataloaders():
 def test_augmentation_parameters():
     dataset = CIFAR10Dataset(train=True)
     
-    # Test CoarseDropout parameters
-    coarse_dropout = None
+    # Test Cutout parameters
+    cutout = None
     for transform in dataset.transform.transforms:
-        if transform.__class__.__name__ == 'CoarseDropout':
-            coarse_dropout = transform
+        if transform.__class__.__name__ == 'Cutout':
+            cutout = transform
             break
     
-    assert coarse_dropout is not None, "CoarseDropout augmentation not found"
-    assert coarse_dropout.max_holes == 1, "CoarseDropout max_holes should be 1"
-    assert coarse_dropout.max_height == 16, "CoarseDropout max_height should be 16"
-    assert coarse_dropout.max_width == 16, "CoarseDropout max_width should be 16"
-    assert coarse_dropout.min_holes == 1, "CoarseDropout min_holes should be 1"
-    assert coarse_dropout.min_height == 16, "CoarseDropout min_height should be 16"
-    assert coarse_dropout.min_width == 16, "CoarseDropout min_width should be 16"
+    assert cutout is not None, "Cutout augmentation not found"
+    assert cutout.num_holes == 1, "Cutout num_holes should be 1"
+    assert cutout.max_h_size == 16, "Cutout max_height should be 16"
+    assert cutout.max_w_size == 16, "Cutout max_width should be 16"
 
 def test_augmentations():
     dataset = CIFAR10Dataset(train=True)
+    torch.manual_seed(42)  # Set seed for reproducibility
     image1, _ = dataset[0]
+    torch.manual_seed(43)  # Different seed
     image2, _ = dataset[0]  # Get same image again
     
     # Test that augmentations are random (images should be different)
-    assert not torch.allclose(image1, image2), "Augmentations should be random"
+    assert not torch.allclose(image1, image2, rtol=1e-3), "Augmentations should be random"
 
 def test_normalization():
     dataset = CIFAR10Dataset(train=False)  # Use test set to avoid augmentations

@@ -32,36 +32,36 @@ class CustomNet(nn.Module):
 
         # Initial convolution layer
         self.conv1 = nn.Sequential(
-            nn.Conv2d(3, 32, kernel_size=3, stride=1, padding=1, bias=False),
-            nn.BatchNorm2d(32),
+            nn.Conv2d(3, 16, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(16),
             nn.ReLU()
         )
 
         # Strided convolution with dilation
         self.conv2 = nn.Sequential(
-            nn.Conv2d(32, 64, kernel_size=3, stride=2,
+            nn.Conv2d(16, 32, kernel_size=3, stride=2,
                      padding=2, dilation=2, bias=False),
-            nn.BatchNorm2d(64),
+            nn.BatchNorm2d(32),
             nn.ReLU()
         )
 
         # Depthwise separable convolution with stride
         self.conv3 = nn.Sequential(
-            DepthwiseSeparableConv(64, 128, stride=2),
-            nn.BatchNorm2d(128),
+            DepthwiseSeparableConv(32, 64, stride=2),
+            nn.BatchNorm2d(64),
             nn.ReLU()
         )
 
         # Final strided convolution
         self.conv4 = nn.Sequential(
-            nn.Conv2d(128, 256, kernel_size=3, stride=2, padding=1, bias=False),
-            nn.BatchNorm2d(256),
+            nn.Conv2d(64, 128, kernel_size=3, stride=2, padding=1, bias=False),
+            nn.BatchNorm2d(128),
             nn.ReLU()
         )
 
         # Global Average Pooling and final FC layer
         self.gap = nn.AdaptiveAvgPool2d(1)
-        self.fc = nn.Linear(256, num_classes)
+        self.fc = nn.Linear(128, num_classes)
 
     def forward(self, x):
         x = self.conv1(x)  # 32x32 -> 32x32
@@ -69,6 +69,6 @@ class CustomNet(nn.Module):
         x = self.conv3(x)  # 16x16 -> 8x8
         x = self.conv4(x)  # 8x8 -> 4x4
         x = self.gap(x)    # 4x4 -> 1x1
-        x = x.view(-1, 256)
+        x = x.view(-1, 128)
         x = self.fc(x)
         return x 

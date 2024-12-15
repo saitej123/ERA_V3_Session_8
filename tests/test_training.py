@@ -77,14 +77,16 @@ def test_model_training_improves():
 def test_learning_rate_scheduling():
     model = CustomNet()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.5, patience=5)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, mode='max', factor=0.5, patience=2, verbose=True
+    )
     
     # Initial learning rate
     initial_lr = optimizer.param_groups[0]['lr']
     
     # Simulate plateau in accuracy
-    for _ in range(6):
-        scheduler.step(50.0)  # Same accuracy for 6 steps
+    for _ in range(3):
+        scheduler.step(50.0)  # Same accuracy for 3 steps
     
     # Check if learning rate was reduced
     final_lr = optimizer.param_groups[0]['lr']

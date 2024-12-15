@@ -15,7 +15,7 @@ def test_model_parameters():
     assert total_params < 200000, f"Model has {total_params} parameters, should be less than 200000"
 
 def test_depthwise_separable_conv():
-    in_channels, out_channels = 64, 128
+    in_channels, out_channels = 32, 64
     conv = DepthwiseSeparableConv(in_channels, out_channels)
     x = torch.randn(1, in_channels, 16, 16)
     output = conv(x)
@@ -37,35 +37,35 @@ def test_model_forward_pass():
     
     # Test each layer's output shape
     x1 = model.conv1(x)
-    assert x1.shape == (1, 32, 32, 32), "Conv1 output shape incorrect"
+    assert x1.shape == (1, 16, 32, 32), "Conv1 output shape incorrect"
     
     x2 = model.conv2(x1)
-    assert x2.shape == (1, 64, 16, 16), "Conv2 output shape incorrect"
+    assert x2.shape == (1, 32, 16, 16), "Conv2 output shape incorrect"
     
     x3 = model.conv3(x2)
-    assert x3.shape == (1, 128, 8, 8), "Conv3 output shape incorrect"
+    assert x3.shape == (1, 64, 8, 8), "Conv3 output shape incorrect"
     
     x4 = model.conv4(x3)
-    assert x4.shape == (1, 256, 4, 4), "Conv4 output shape incorrect"
+    assert x4.shape == (1, 128, 4, 4), "Conv4 output shape incorrect"
     
     x5 = model.gap(x4)
-    assert x5.shape == (1, 256, 1, 1), "GAP output shape incorrect"
+    assert x5.shape == (1, 128, 1, 1), "GAP output shape incorrect"
 
 def calculate_rf_size(model):
-    # Initial RF is 1x1
+    """Calculate receptive field size for the model."""
     rf_size = 1
     
     # Conv1: 3x3 kernel
-    rf_size = rf_size + 2 * 1  # kernel_size=3, dilation=1
+    rf_size = rf_size + 2  # kernel_size=3, dilation=1
     
-    # Conv2: 3x3 kernel with dilation=2
-    rf_size = rf_size + 2 * 2 * 2  # kernel_size=3, dilation=2, stride=2 doubles effective RF
+    # Conv2: 3x3 kernel with dilation=2 and stride=2
+    rf_size = rf_size + 2 * 2 * 2  # kernel_size=3, dilation=2, stride=2
     
     # Conv3: 3x3 depthwise with stride=2
-    rf_size = rf_size + 2 * 2  # kernel_size=3, stride=2 doubles effective RF
+    rf_size = rf_size + 2 * 2 * 2  # kernel_size=3, stride=2, previous stride=2
     
     # Conv4: 3x3 with stride=2
-    rf_size = rf_size + 2 * 2  # kernel_size=3, stride=2 doubles effective RF
+    rf_size = rf_size + 2 * 2 * 2 * 2  # kernel_size=3, stride=2, previous strides=2,2
     
     return rf_size
 

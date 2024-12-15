@@ -16,11 +16,18 @@ class CIFAR10Dataset:
         if train:
             self.transform = A.Compose([
                 A.HorizontalFlip(p=0.5),
-                A.ShiftScaleRotate(shift_limit=0.1, scale_limit=0.1, rotate_limit=15, p=0.5),
-                A.CoarseDropout(
-                    max_holes=1, max_height=16, max_width=16,
-                    min_holes=1, min_height=16, min_width=16,
-                    fill_value=self.mean, p=0.5
+                A.ShiftScaleRotate(
+                    shift_limit=0.1,
+                    scale_limit=0.1,
+                    rotate_limit=15,
+                    p=0.5
+                ),
+                A.Cutout(
+                    num_holes=1,
+                    max_h_size=16,
+                    max_w_size=16,
+                    fill_value=self.mean,
+                    p=0.5
                 ),
                 A.Normalize(mean=self.mean, std=self.std),
                 ToTensorV2()
@@ -45,13 +52,19 @@ def get_dataloaders(batch_size=128, num_workers=4):
     test_dataset = CIFAR10Dataset(train=False, download=True)
     
     train_loader = torch.utils.data.DataLoader(
-        train_dataset, batch_size=batch_size, shuffle=True, 
-        num_workers=num_workers, pin_memory=True
+        train_dataset,
+        batch_size=batch_size,
+        shuffle=True,
+        num_workers=num_workers,
+        pin_memory=True
     )
     
     test_loader = torch.utils.data.DataLoader(
-        test_dataset, batch_size=batch_size, shuffle=False, 
-        num_workers=num_workers, pin_memory=True
+        test_dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=num_workers,
+        pin_memory=True
     )
     
     return train_loader, test_loader 
