@@ -22,11 +22,15 @@ class CIFAR10Dataset:
                     rotate_limit=15,
                     p=0.5
                 ),
-                A.Cutout(
-                    num_holes=1,
-                    max_h_size=16,
-                    max_w_size=16,
+                A.CoarseDropout(
+                    max_holes=1,
+                    max_height=16,
+                    max_width=1,
+                    min_holes=1,
+                    min_height=16,
+                    min_width=16,
                     fill_value=self.mean,
+                    mask_fill_value=None,
                     p=0.5
                 ),
                 A.Normalize(mean=self.mean, std=self.std),

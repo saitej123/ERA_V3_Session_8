@@ -33,20 +33,29 @@ def test_dataloaders():
     assert images.dtype == torch.float32, "Images should be float32"
     assert labels.dtype == torch.long, "Labels should be long"
 
-def test_augmentation_parameters():
+def test_augmentation_requirements():
+    """Test the required augmentations are present with correct parameters"""
     dataset = CIFAR10Dataset(train=True)
     
-    # Test Cutout parameters
-    cutout = None
-    for transform in dataset.transform.transforms:
-        if transform.__class__.__name__ == 'Cutout':
-            cutout = transform
-            break
+    # Get list of transform names
+    transform_names = [type(t).__name__ for t in dataset.transform.transforms]
     
-    assert cutout is not None, "Cutout augmentation not found"
-    assert cutout.num_holes == 1, "Cutout num_holes should be 1"
-    assert cutout.max_h_size == 16, "Cutout max_height should be 16"
-    assert cutout.max_w_size == 16, "Cutout max_width should be 16"
+    # Check for required augmentations
+    assert 'HorizontalFlip' in transform_names, "HorizontalFlip augmentation missing"
+    assert 'ShiftScaleRotate' in transform_names, "ShiftScaleRotate augmentation missing"
+    assert 'CoarseDropout' in transform_names, "CoarseDropout augmentation missing"
+    
+    # Check CoarseDropout parameters
+    for transform in dataset.transform.transforms:
+        if type(transform).__name__ == 'CoarseDropout':
+            assert transform.max_holes == 1, "CoarseDropout max_holes should be 1"
+            assert transform.max_height == 16, "CoarseDropout max_height should be 16"
+            assert transform.max_width == 1, "CoarseDropout max_width should be 1"
+            assert transform.min_holes == 1, "CoarseDropout min_holes should be 1"
+            assert transform.min_height == 16, "CoarseDropout min_height should be 16"
+            assert transform.min_width == 16, "CoarseDropout min_width should be 16"
+            assert transform.fill_value == dataset.mean, "CoarseDropout fill_value should be dataset mean"
+            assert transform.mask_fill_value is None, "CoarseDropout mask_fill_value should be None"
 
 def test_augmentations():
     dataset = CIFAR10Dataset(train=True)
@@ -59,6 +68,7 @@ def test_augmentations():
     assert not torch.allclose(image1, image2, rtol=1e-3), "Augmentations should be random"
 
 def test_normalization():
+    """Test images are properly normalized"""
     dataset = CIFAR10Dataset(train=False)  # Use test set to avoid augmentations
     image, _ = dataset[0]
     
@@ -66,7 +76,8 @@ def test_normalization():
     assert -0.5 <= image.mean() <= 0.5, "Image mean should be approximately 0"
     assert 0.5 <= image.std() <= 1.5, "Image std should be approximately 1"
 
-def test_cifar10_mean_std():
+def test_cifar10_stats():
+    """Test CIFAR-10 mean and std values are correct"""
     dataset = CIFAR10Dataset(train=True)
     assert np.allclose(dataset.mean, (0.4914, 0.4822, 0.4465), atol=1e-4), "Incorrect CIFAR-10 mean"
     assert np.allclose(dataset.std, (0.2470, 0.2435, 0.2616), atol=1e-4), "Incorrect CIFAR-10 std" 
