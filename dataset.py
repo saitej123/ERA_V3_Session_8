@@ -25,10 +25,10 @@ class CIFAR10Dataset:
                 A.CoarseDropout(
                     max_holes=1,
                     max_height=16,
-                    max_width=1,
+                    max_width=16,
                     min_holes=1,
                     min_height=16,
-                    min_width=16,
+                    min_width=1,
                     fill_value=self.mean,
                     mask_fill_value=None,
                     p=0.5
